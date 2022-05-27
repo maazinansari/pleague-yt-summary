@@ -49,30 +49,43 @@ def get_playlist_items(playlist_id, n=20, resultsPerPage=20):
                     video_list = video_list)
     return(out_dict)
 
-def get_video_details(video_list):
-    # views
-    # duration
-    # comments
-    # localized title?
-    # 
+def get_video_details(video_id_list):
+    comma = ','
+    video_list_str = comma.join(video_id_list)
+    video_request = yt_service.videos().list(part="snippet,contentDetails,statistics",
+                                             id=video_list_str)
+    video_response = video_request.execute()
+    n_response = video_response['pageInfo']['totalResults']
+    
+    for vid in video_response['items']:
+        # views
+        views = vid['statistics']['viewCount']
+        # duration
+        duration = vid['contentDetails']['duration']
+        # comments
+        comments = vid['statistics']['commentCount']
+        # localized title?
+
     return(None)
     
-# returns a list of dictionaries. Easier to create than a dictionary of lists
+# returns a dictionary of dictionaries. Easier to create than a dictionary of lists
+# {id_1: {}, id_2: {}, ... }
 def playlist_to_table(playlist_items):
     total_videos = playlist_items['total_video_count']
-    out_list = list()
+    
+    out_dict = dict()
     for vid in playlist_items['video_list']:
-        new_row = {
+        new_id = vid['snippet']['resourceId']['videoId']
+        out_dict[new_id] = {
             'publish_time' : vid['snippet']['publishedAt'],
             'index'        : total_videos - int(vid['snippet']['position']),
-            'id'           : vid['snippet']['resourceId']['videoId'],
+            'id'           : vid['snippet']['resourceId']['videoId'], #redundant
             'title'        : vid['snippet']['title'],
             #'description'  : vid['snippet']['description'],
             'thumbnail'    : vid['snippet']['thumbnails']['default']['url']
             }
-        out_list.append(new_row)
     
-    return(out_list)
+    return(out_dict)
     
 # print(yt_response)
 
@@ -83,6 +96,9 @@ print(x)
 y = get_playlist_items(x,107, 50)
 z = playlist_to_table(y)
 for j in z:
-    print(j['index'], j['id'], j['publish_time'])
+    print(z[j]['index'], z[j]['id'], z[j]['publish_time'])
     
 # most videos posted between 0700 UTC and 1400 UTC
+
+
+# vid_list = [x[][] for x in vid_listjson]
