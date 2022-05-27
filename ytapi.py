@@ -57,16 +57,16 @@ def get_video_details(video_id_list):
     video_response = video_request.execute()
     n_response = video_response['pageInfo']['totalResults']
     
+    out_dict = dict()
     for vid in video_response['items']:
-        # views
-        views = vid['statistics']['viewCount']
-        # duration
-        duration = vid['contentDetails']['duration']
-        # comments
-        comments = vid['statistics']['commentCount']
+        out_dict[vid['id']] = {
+            'views':    int(vid['statistics']['viewCount']),
+            'duration': int(vid['contentDetails']['duration']),
+            'comments': int(vid['statistics']['commentCount'])
+            }
         # localized title?
 
-    return(None)
+    return(out_dict)
     
 # returns a dictionary of dictionaries. Easier to create than a dictionary of lists
 # {id_1: {}, id_2: {}, ... }
@@ -90,15 +90,16 @@ def playlist_to_table(playlist_items):
 # print(yt_response)
 
 
-
-x = get_playlist_id('UC0v-pxTo1XamIDE-f__Ad0Q') #(パーソル パ・リーグTV公式)PacificLeagueTV = UC0v-pxTo1XamIDE-f__Ad0Q
-print(x)
-y = get_playlist_items(x,107, 50)
-z = playlist_to_table(y)
-for j in z:
-    print(z[j]['index'], z[j]['id'], z[j]['publish_time'])
+if __name__ == '__main__':
+    x = get_playlist_id('UC0v-pxTo1XamIDE-f__Ad0Q') #(パーソル パ・リーグTV公式)PacificLeagueTV = UC0v-pxTo1XamIDE-f__Ad0Q
+    print(x)
+    y = get_playlist_items(x,5, 5)
+    z = playlist_to_table(y)
+    for j in z:
+        print(z[j]['index'], z[j]['id'], z[j]['publish_time'])
+    vid_list = [j for j in z]
+    print(get_video_details(vid_list))
     
 # most videos posted between 0700 UTC and 1400 UTC
 
 
-# vid_list = [x[][] for x in vid_listjson]
