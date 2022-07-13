@@ -1,8 +1,9 @@
 import os
+import re
 from googleapiclient.discovery import build
 
 api_key = os.environ.get('API_KEY_YT')
-print(api_key)
+
 
 yt_service = build(serviceName='youtube', version='v3',  developerKey=api_key)
 
@@ -49,6 +50,8 @@ def get_playlist_items(playlist_id, n=20, resultsPerPage=20):
                     video_list = video_list)
     return(out_dict)
 
+# returns a dictionary of video details
+# {id_1: {}, id_2: {}, ... }
 def get_video_details(video_id_list):
     comma = ','
     video_list_str = comma.join(video_id_list)
@@ -57,20 +60,20 @@ def get_video_details(video_id_list):
     video_response = video_request.execute()
     n_response = video_response['pageInfo']['totalResults']
     
+    out_dict = dict()
     for vid in video_response['items']:
-        # views
-        views = vid['statistics']['viewCount']
-        # duration
-        duration = vid['contentDetails']['duration']
-        # comments
-        comments = vid['statistics']['commentCount']
+        out_dict[vid['id']] = {
+            'views':    int(vid['statistics']['viewCount']),
+            'duration': duration_to_hhmmss(vid['contentDetails']['duration']),
+            'comments': int(vid['statistics']['commentCount'])
+            }
         # localized title?
 
-    return(None)
+    return(out_dict)
     
 # returns a dictionary of dictionaries. Easier to create than a dictionary of lists
 # {id_1: {}, id_2: {}, ... }
-def playlist_to_table(playlist_items):
+def playlist_to_table(playlist_items, include_video_details = True):
     total_videos = playlist_items['total_video_count']
     
     out_dict = dict()
@@ -85,20 +88,40 @@ def playlist_to_table(playlist_items):
             'thumbnail'    : vid['snippet']['thumbnails']['default']['url']
             }
     
+    if include_video_details:
+        video_id_list = [k for k in out_dict.keys()]
+        video_details = get_video_details(video_id_list)
+        for id in video_id_list:
+            out_dict[id].update(video_details[id])
+        
     return(out_dict)
     
 # print(yt_response)
 
+# copied from https://gist.github.com/spatialtime/c1924a3b178b4fe721fe406e0bf1a1dc
+def duration_to_hhmmss(x):
+    m = re.match(r'^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:.\d+)?)S)?$', x)
+    if m is None:
+        raise ValueError("invalid ISO 8601 duration string")
+    hours = minutes = seconds = 0
+    if m.group(1):
+        hours = m.group(1)
+    if m.group(2):
+        minutes = m.group(2)
+    if m.group(3):
+        seconds = m.group(3)
+    str_duration = '{:0>2}:{:0>2}:{:0>2}'.format(hours, minutes, seconds)
+    return(str_duration)
+    
 
-
-x = get_playlist_id('UC0v-pxTo1XamIDE-f__Ad0Q') #(パーソル パ・リーグTV公式)PacificLeagueTV = UC0v-pxTo1XamIDE-f__Ad0Q
-print(x)
-y = get_playlist_items(x,107, 50)
-z = playlist_to_table(y)
-for j in z:
-    print(z[j]['index'], z[j]['id'], z[j]['publish_time'])
+if __name__ == '__main__':
+    x = get_playlist_id('UC0v-pxTo1XamIDE-f__Ad0Q') #(パーソル パ・リーグTV公式)PacificLeagueTV = UC0v-pxTo1XamIDE-f__Ad0Q
+    print(x)
+    y = get_playlist_items(x,5, 5)
+    z = playlist_to_table(y)
+    for j in z:
+        print(z[j]['index'], z[j]['id'], z[j]['publish_time'], z[j]['duration'])
     
 # most videos posted between 0700 UTC and 1400 UTC
 
 
-# vid_list = [x[][] for x in vid_listjson]
