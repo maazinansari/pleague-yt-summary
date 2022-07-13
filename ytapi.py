@@ -1,8 +1,9 @@
 import os
+import re
 from googleapiclient.discovery import build
 
 api_key = os.environ.get('API_KEY_YT')
-print(api_key)
+
 
 yt_service = build(serviceName='youtube', version='v3',  developerKey=api_key)
 
@@ -61,7 +62,7 @@ def get_video_details(video_id_list):
     for vid in video_response['items']:
         out_dict[vid['id']] = {
             'views':    int(vid['statistics']['viewCount']),
-            'duration': int(vid['contentDetails']['duration']),
+            'duration': duration_to_hhmmss(vid['contentDetails']['duration']),
             'comments': int(vid['statistics']['commentCount'])
             }
         # localized title?
@@ -89,6 +90,21 @@ def playlist_to_table(playlist_items):
     
 # print(yt_response)
 
+# copied from https://gist.github.com/spatialtime/c1924a3b178b4fe721fe406e0bf1a1dc
+def duration_to_hhmmss(x):
+    m = re.match(r'^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:.\d+)?)S)?$', x)
+    if m is None:
+        raise ValueError("invalid ISO 8601 duration string")
+    hours = minutes = seconds = 0
+    if m.group(1):
+        hours = m.group(1)
+    if m.group(2):
+        minutes = m.group(2)
+    if m.group(3):
+        seconds = m.group(3)
+    str_duration = '{:0>2}:{:0>2}:{:0>2}'.format(hours, minutes, seconds)
+    return(str_duration)
+    
 
 if __name__ == '__main__':
     x = get_playlist_id('UC0v-pxTo1XamIDE-f__Ad0Q') #(パーソル パ・リーグTV公式)PacificLeagueTV = UC0v-pxTo1XamIDE-f__Ad0Q
