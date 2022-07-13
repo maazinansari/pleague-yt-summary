@@ -50,6 +50,8 @@ def get_playlist_items(playlist_id, n=20, resultsPerPage=20):
                     video_list = video_list)
     return(out_dict)
 
+# returns a dictionary of video details
+# {id_1: {}, id_2: {}, ... }
 def get_video_details(video_id_list):
     comma = ','
     video_list_str = comma.join(video_id_list)
@@ -71,7 +73,7 @@ def get_video_details(video_id_list):
     
 # returns a dictionary of dictionaries. Easier to create than a dictionary of lists
 # {id_1: {}, id_2: {}, ... }
-def playlist_to_table(playlist_items):
+def playlist_to_table(playlist_items, include_video_details = True):
     total_videos = playlist_items['total_video_count']
     
     out_dict = dict()
@@ -86,6 +88,12 @@ def playlist_to_table(playlist_items):
             'thumbnail'    : vid['snippet']['thumbnails']['default']['url']
             }
     
+    if include_video_details:
+        video_id_list = [k for k in out_dict.keys()]
+        video_details = get_video_details(video_id_list)
+        for id in video_id_list:
+            out_dict[id].update(video_details[id])
+        
     return(out_dict)
     
 # print(yt_response)
@@ -112,9 +120,7 @@ if __name__ == '__main__':
     y = get_playlist_items(x,5, 5)
     z = playlist_to_table(y)
     for j in z:
-        print(z[j]['index'], z[j]['id'], z[j]['publish_time'])
-    vid_list = [j for j in z]
-    print(get_video_details(vid_list))
+        print(z[j]['index'], z[j]['id'], z[j]['publish_time'], z[j]['duration'])
     
 # most videos posted between 0700 UTC and 1400 UTC
 
